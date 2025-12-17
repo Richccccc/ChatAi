@@ -5,16 +5,43 @@ from sqlalchemy import create_engine
 import os
 
 # 配置
-DB_URL = "mysql+pymysql://root:123456@localhost:3306/over?charset=utf8mb4"
+import re
+
+def get_db_connection_url():
+    # 尝试从环境变量获取
+    db_url_env = os.environ.get("DB_URL")
+    db_user = os.environ.get("DB_USERNAME", "root")
+    db_pass = os.environ.get("DB_PASSWORD", "123456")
+    
+    # 默认值 (本地开发)
+    host = "localhost"
+    port = "3306"
+    database = "over"
+    
+    if db_url_env:
+        # 解析 JDBC URL
+        # 格式: jdbc:mysql://host:port/database?params
+        match = re.search(r"jdbc:mysql://([^:/]+):(\d+)/([^?]+)", db_url_env)
+        if match:
+            host = match.group(1)
+            port = match.group(2)
+            database = match.group(3)
+    
+    # 构建 SQLAlchemy URL
+    # 格式: mysql+pymysql://user:password@host:port/database
+    return f"mysql+pymysql://{db_user}:{db_pass}@{host}:{port}/{database}?charset=utf8mb4"
 
 def get_data_from_db():
     try:
-        engine = create_engine(DB_URL)
+        url = get_db_connection_url()
+        # print(f"Connecting to DB: {url.split('@')[1]}") # Debug info (hide password)
+        engine = create_engine(url)
         query = "SELECT * FROM job_postings"
         df = pd.read_sql(query, engine)
         return df
     except Exception as e:
-        # 如果表不存在，返回空DataFrame
+        # 如果表不存在或连接失败，返回空DataFrame
+        # print(f"DB Error: {str(e)}")
         return pd.DataFrame()
 
 def analyze():
