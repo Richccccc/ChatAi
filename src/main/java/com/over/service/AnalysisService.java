@@ -54,12 +54,7 @@ public class AnalysisService {
             String scriptPath = getScriptPath();
             File scriptFile = new File(scriptPath);
             if (!scriptFile.exists()) {
-                // Try absolute path if relative fails
-                File absoluteFile = new File(System.getProperty("user.dir"), SCRIPT_PATH);
-                if (!absoluteFile.exists()) {
-                    return "{\"error\": \"Script not found: " + SCRIPT_PATH + "\"}";
-                }
-                scriptFile = absoluteFile;
+                return "{\"error\": \"Script not found: " + scriptPath + "\"}";
             }
 
             ProcessBuilder processBuilder = new ProcessBuilder("python", scriptFile.getAbsolutePath());
