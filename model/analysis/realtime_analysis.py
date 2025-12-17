@@ -29,24 +29,28 @@ def get_db_connection_url():
     
     # 构建 SQLAlchemy URL
     # 格式: mysql+pymysql://user:password@host:port/database
-    return f"mysql+pymysql://{db_user}:{db_pass}@{host}:{port}/{database}?charset=utf8mb4"
+    # TiDB Cloud 需要 SSL 连接。在 Alpine 容器中，系统 CA 证书通常位于 /etc/ssl/certs/ca-certificates.crt
+    ssl_params = "?charset=utf8mb4&ssl_ca=/etc/ssl/certs/ca-certificates.crt&ssl_verify_cert=true"
+    return f"mysql+pymysql://{db_user}:{db_pass}@{host}:{port}/{database}{ssl_params}"
 
 def get_data_from_db():
     try:
         url = get_db_connection_url()
-        # print(f"Connecting to DB: {url.split('@')[1]}") # Debug info (hide password)
+        # print(f"Connecting to DB: {url.split('@')[1]}") 
         engine = create_engine(url)
         query = "SELECT * FROM job_postings"
         df = pd.read_sql(query, engine)
-        return df
+        return df, None
     except Exception as e:
-        # 如果表不存在或连接失败，返回空DataFrame
-        # print(f"DB Error: {str(e)}")
-        return pd.DataFrame()
+        return pd.DataFrame(), str(e)
 
 def analyze():
-    df = get_data_from_db()
+    df, error = get_data_from_db()
     results = {}
+
+    if error:
+        print(json.dumps({"error": f"Database connection failed: {error}"}))
+        return
 
     if df.empty:
         print(json.dumps({"error": "No data found in database"}))
