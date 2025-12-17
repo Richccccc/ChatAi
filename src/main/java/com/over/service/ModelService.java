@@ -51,22 +51,22 @@ public class ModelService {
 
     // 动态获取模型目录，根据工作目录自动调整
     private static String getModelDir() {
-        String userDir = System.getProperty("user.dir");
-        // 如果工作目录是 backend，则使用相对路径 model/model
-        if (userDir.endsWith("backend") || userDir.endsWith("backend" + File.separator)) {
+        // 优先检查当前目录下的 model/model
+        File localModel = new File("model" + File.separator + "model");
+        if (localModel.exists()) {
             return "model" + File.separator + "model";
         }
-        // 否则从项目根目录开始，使用 backend/model/model
+        // 其次检查 backend/model/model
         return "backend" + File.separator + "model" + File.separator + "model";
     }
     
     private static String getPredictScript() {
-        String userDir = System.getProperty("user.dir");
-        // 如果工作目录是 backend，则使用相对路径 model/predict.py
-        if (userDir.endsWith("backend") || userDir.endsWith("backend" + File.separator)) {
+        // 优先检查当前目录下的 model/predict.py
+        File localScript = new File("model" + File.separator + "predict.py");
+        if (localScript.exists()) {
             return "model" + File.separator + "predict.py";
         }
-        // 否则从项目根目录开始，使用 backend/model/predict.py
+        // 其次检查 backend/model/predict.py
         return "backend" + File.separator + "model" + File.separator + "predict.py";
     }
 

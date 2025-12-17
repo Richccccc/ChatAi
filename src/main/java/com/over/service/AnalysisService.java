@@ -19,7 +19,18 @@ import java.util.stream.Stream;
 @Service
 public class AnalysisService {
 
-    private static final String SCRIPT_PATH = "model/analysis/realtime_analysis.py";
+    // private static final String SCRIPT_PATH = "model/analysis/realtime_analysis.py";
+
+    private String getScriptPath() {
+        // 优先检查当前目录下的 model/analysis/realtime_analysis.py (Docker环境)
+        String path = "model" + File.separator + "analysis" + File.separator + "realtime_analysis.py";
+        File localFile = new File(path);
+        if (localFile.exists()) {
+            return path;
+        }
+        // 其次检查 backend/model... (本地环境)
+        return "backend" + File.separator + "model" + File.separator + "analysis" + File.separator + "realtime_analysis.py";
+    }
 
     // 可以在应用启动时自动运行分析
     @PostConstruct
@@ -40,7 +51,8 @@ public class AnalysisService {
     public String runPythonAnalysis() {
         StringBuilder output = new StringBuilder();
         try {
-            File scriptFile = new File(SCRIPT_PATH);
+            String scriptPath = getScriptPath();
+            File scriptFile = new File(scriptPath);
             if (!scriptFile.exists()) {
                 // Try absolute path if relative fails
                 File absoluteFile = new File(System.getProperty("user.dir"), SCRIPT_PATH);
